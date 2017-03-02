@@ -1,0 +1,11 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+pkglibdir=${exec_prefix}/lib/lxpanel
+includedir=${prefix}/include/lxpanel
+pluginsdir=${pkglibdir}/plugins
+
+Name: lxpanel
+Description: A lightweight X11 desktop panel
+Requires: gtk+-3.0 libfm >= 1.2.0
+Version: 0.9.3
+Libs: -L${pkglibdir} -llxpanel
