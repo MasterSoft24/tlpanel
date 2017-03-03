@@ -39,7 +39,7 @@ return args; } while(0)
 
 #else
 
-#define ENTER         do {  } while(0)
+#define ENTER     do {  } while(0)
 #define RET(args...)   return args
 #define DBG(fmt, args...)   do {  } while(0)
 

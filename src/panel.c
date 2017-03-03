@@ -801,7 +801,7 @@ void _panel_determine_background_pixmap(LXPanel * panel)
             /* User specified background pixmap. */
             pixbuf = gdk_pixbuf_new_from_file(p->background_file, NULL);
         }
-        if ((p->transparent && p->alpha != 255) || /* ignore it for opaque panel */
+        if ((p->transparent &&p->gtintcolor.alpha != 1) || /* ignore it for opaque panel */
             (pixbuf != NULL && gdk_pixbuf_get_has_alpha(pixbuf)))
         {
             /* Transparent.  Determine the appropriate value from the root pixmap. */
@@ -809,6 +809,12 @@ void _panel_determine_background_pixmap(LXPanel * panel)
         }
         if (pixbuf != NULL)
         {
+            
+            cairo_save (cr);
+            cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+            cairo_paint(cr);
+            cairo_restore (cr);
+            
             gint w = gdk_pixbuf_get_width(pixbuf);
             gint h = gdk_pixbuf_get_height(pixbuf);
 
@@ -1552,14 +1558,118 @@ void _panel_establish_autohide(LXPanel *p)
     }
 }
 
+
+
+
+void clear_pixbuf_with_bg(Panel * p, GtkWidget * image){
+    
+        cairo_format_t format;
+        cairo_surface_t *surface;
+        cairo_t *cr;
+        gint width;
+        gint height;
+        gint x = 0, y = 0;
+        
+        GdkPixbuf * pixbuf = gtk_image_get_pixbuf(image);
+        
+        format = (gdk_pixbuf_get_has_alpha (pixbuf)) ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
+        width = gdk_pixbuf_get_width (pixbuf);
+        height = gdk_pixbuf_get_height (pixbuf);
+        surface = cairo_image_surface_create (format, width, height);
+        
+        cr = cairo_create (surface);
+        
+        gdk_cairo_set_source_pixbuf (cr, pixbuf, 0, 0);
+        
+        if (p->background)
+        {
+            /* User specified background pixmap. */
+            pixbuf = gdk_pixbuf_new_from_file(p->background_file, NULL);
+        }
+        
+        
+        if ((p->transparent && p->gtintcolor.alpha !=1) || /* ignore it for opaque panel */
+            (pixbuf != NULL && gdk_pixbuf_get_has_alpha(pixbuf)))
+        {
+            /* Transparent.  Determine the appropriate value from the root pixmap. */
+            //paint_root_pixmap(panel, cr);
+            
+            
+            cairo_set_source_rgba(cr,p->gtintcolor.red,p->gtintcolor.green,p->gtintcolor.blue,p->gtintcolor.alpha);
+            cairo_rectangle (cr,0, 0,width,height);
+            cairo_paint (cr) ;  
+           
+            
+        }
+        
+        
+        if (pixbuf != NULL)// draw with background image
+        {
+            
+            cairo_save (cr);
+            cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+            cairo_paint(cr);
+            cairo_restore (cr);
+            
+            gint w = gdk_pixbuf_get_width(pixbuf);
+            gint h = gdk_pixbuf_get_height(pixbuf);
+
+            /* Tile the image */
+            for (y = 0; y < p->ah; y += h)
+                for (x = 0; x < p->aw; x += w)
+                {
+                    gdk_cairo_set_source_pixbuf(cr, pixbuf, x, y);
+                    cairo_paint(cr);
+                }
+            y = 0;
+           
+        }
+        
+        gtk_image_set_from_pixbuf(GTK_IMAGE(image), pixbuf);
+        
+        cairo_surface_destroy (surface);
+        cairo_destroy (cr);
+        
+        g_object_unref(pixbuf);
+    
+}
+
+
+
 /* Set an image from a file with scaling to the panel icon size. */
 void panel_image_set_from_file(Panel * p, GtkWidget * image, const char * file)
 {
+        cairo_format_t format;
+        cairo_surface_t *surface;
+        cairo_t *cr;
+        gint width;
+        gint height;
+        
+        clear_pixbuf_with_bg(p,image);
+        
     GdkPixbuf * pixbuf = gdk_pixbuf_new_from_file_at_scale(file, p->icon_size, p->icon_size, TRUE, NULL);
     if (pixbuf != NULL)
     {
+        format = (gdk_pixbuf_get_has_alpha (pixbuf)) ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
+        width = gdk_pixbuf_get_width (pixbuf);
+        height = gdk_pixbuf_get_height (pixbuf);
+        surface = cairo_image_surface_create (format, width, height);
+        
+        cr = cairo_create (surface);
+        
+        gdk_cairo_set_source_pixbuf (cr, pixbuf, 0, 0);
+        
+        cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+        cairo_paint(cr);
+        
+        
         gtk_image_set_from_pixbuf(GTK_IMAGE(image), pixbuf);
+        
+        cairo_surface_destroy (surface);
+        cairo_destroy (cr);
+        
         g_object_unref(pixbuf);
+
     }
 }
 
@@ -1573,9 +1683,37 @@ gboolean panel_image_set_icon_theme(Panel * p, GtkWidget * image, const gchar * 
 {
     if (gtk_icon_theme_has_icon(p->icon_theme, icon))
     {
+        
+        cairo_format_t format;
+        cairo_surface_t *surface;
+        cairo_t *cr;
+        gint width;
+        gint height;
+        
+        clear_pixbuf_with_bg(p,image);
+        
         GdkPixbuf * pixbuf = gtk_icon_theme_load_icon(p->icon_theme, icon, p->icon_size, 0, NULL);
+        
+        format = (gdk_pixbuf_get_has_alpha (pixbuf)) ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
+        width = gdk_pixbuf_get_width (pixbuf);
+        height = gdk_pixbuf_get_height (pixbuf);
+        surface = cairo_image_surface_create (format, width, height);
+        
+        cr = cairo_create (surface);
+        
+        gdk_cairo_set_source_pixbuf (cr, pixbuf, 0, 0);
+        
+        cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+        cairo_paint(cr);
+        
+        
         gtk_image_set_from_pixbuf(GTK_IMAGE(image), pixbuf);
+        
+        cairo_surface_destroy (surface);
+        cairo_destroy (cr);
+        
         g_object_unref(pixbuf);
+        
         return TRUE;
     }
     return FALSE;

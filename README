@@ -1,3 +1,10 @@
+
+
+Although tlpanel is a fork of lxpanel of original LXDE and it have  own name 
+(tlpanel), all components still have the old names. For some time !!
+
+===============================================================================
+
 LXPanel is a lightweight X11 desktop panel.
 
 To build this program you need some development packages:

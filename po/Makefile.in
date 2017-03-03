@@ -35,7 +35,7 @@ datarootdir = ${prefix}/share
 libdir = ${exec_prefix}/lib
 localedir = ${datarootdir}/locale
 subdir = po
-install_sh = ${SHELL} /home/ms/NetBeansProjects/lxde-reloaded/lxpanel-reloaded/lxpanel/install-sh
+install_sh = ${SHELL} /home/ms/NetBeansProjects/TLDE/lxpanel/install-sh
 # Automake >= 1.8 provides $(MKDIR_P).
 # Until it can be supposed, use the safe fallback:
 mkdir_p = $(install_sh) -d

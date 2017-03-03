@@ -431,7 +431,7 @@ on_font_color_set(GtkColorButton* clr, LXPanel* panel)
     Panel *p = panel->priv;
 
     //gtk_color_button_get_color( clr, &p->gfontcolor );
-    gtk_color_chooser_get_rgba( clr, &p->gfontcolor );// fix by MS
+    gtk_color_chooser_get_rgba( (GtkColorChooser*)clr, &p->gfontcolor );// fix by MS
     panel_set_panel_configuration_changed(p);
     p->fontcolor = gcolor2rgb24(&p->gfontcolor);
     UPDATE_GLOBAL_COLOR(p, "fontcolor", p->gfontcolor);
@@ -967,7 +967,7 @@ static int get_widget_index(LXPanel* p, GtkWidget* pl)
 
 static void on_moveup_plugin(  GtkButton* btn, GtkTreeView* view )
 {
-    GtkTreeIter it, prev;
+   GtkTreeIter it, prev;
     GtkTreeModel* model = gtk_tree_view_get_model( view );
     GtkTreeSelection* tree_sel = gtk_tree_view_get_selection( view );
     int i;
@@ -1001,6 +1001,10 @@ static void on_moveup_plugin(  GtkButton* btn, GtkTreeView* view )
         prev = it;
     }while( gtk_tree_model_iter_next( model, &it ) );
 }
+
+
+
+
 
 static void on_movedown_plugin(  GtkButton* btn, GtkTreeView* view )
 {

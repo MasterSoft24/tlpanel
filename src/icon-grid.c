@@ -26,6 +26,11 @@
 #include "icon-grid.h"
 #include "panel.h" /* for panel_get_height() */
 #include "gtk-compat.h"
+#include "private.h"
+
+extern LXPanel * panel_global_ref; 
+
+
 
 /* Properties */
 enum {
@@ -964,35 +969,152 @@ static void panel_icon_grid_map(GtkWidget *widget)
 static void panel_icon_grid_unmap(GtkWidget *widget)
 {
     PanelIconGrid *ig = PANEL_ICON_GRID(widget);
+    GtkStyleContext *sc;
 
     if (ig->event_window != NULL)
         gdk_window_hide(ig->event_window);
     GTK_WIDGET_CLASS(panel_icon_grid_parent_class)->unmap(widget);
 }
 
-#if GTK_CHECK_VERSION(3, 0, 0)
+
 static gboolean panel_icon_grid_draw(GtkWidget *widget, cairo_t *cr)
-#else
-static gboolean panel_icon_grid_expose(GtkWidget *widget, GdkEventExpose *event)
-#endif
 {
     if (gtk_widget_is_drawable(widget))
     {
         PanelIconGrid *ig;
+        GtkStyleContext* sc;
 
         if (gtk_widget_get_has_window(widget) &&
             !gtk_widget_get_app_paintable(widget))
-#if GTK_CHECK_VERSION(3, 0, 0)
-            gtk_render_background(gtk_widget_get_style_context(widget), cr, 0, 0,
-                                  gtk_widget_get_allocated_width(widget),
-                                  gtk_widget_get_allocated_height(widget));
-#else
-            gtk_paint_flat_box(gtk_widget_get_style(widget),
-                               gtk_widget_get_window(widget),
-                               gtk_widget_get_state(widget), GTK_SHADOW_NONE,
-                               &event->area, widget, "panelicongrid",
-                               0, 0, -1, -1);
-#endif
+
+            // clear previous content of pixmap
+            
+            sc= gtk_widget_get_style_context(widget);
+            //sc= gtk_widget_get_style_context(panel_global_ref->priv->box);
+        
+
+            
+            Panel* p=panel_global_ref->priv;
+            
+            
+            
+            
+            
+        GdkPixbuf *pixbuf = NULL;
+        gint x = 0, y = 0;
+
+        if (p->background)
+        {
+            /* User specified background pixmap. */
+            pixbuf = gdk_pixbuf_new_from_file(p->background_file, NULL);
+        }
+        
+        
+        if ((p->transparent && p->gtintcolor.alpha !=1) || /* ignore it for opaque panel */
+            (pixbuf != NULL && gdk_pixbuf_get_has_alpha(pixbuf)))
+        {
+            /* Transparent.  Determine the appropriate value from the root pixmap. */
+            //paint_root_pixmap(panel, cr);
+            
+//            cairo_save (cr);
+//            cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+//            cairo_paint(cr);
+//            cairo_restore (cr);
+            
+            cairo_set_source_rgba(cr,p->gtintcolor.red,p->gtintcolor.green,p->gtintcolor.blue,p->gtintcolor.alpha);
+            cairo_rectangle (cr,0, 0,gtk_widget_get_allocated_width(widget),gtk_widget_get_allocated_height(widget));
+            cairo_fill (cr) ;  
+           //cairo_paint_with_alpha(cr, p->gtintcolor.alpha);
+                
+//            GdkRGBA scolor;
+//            gtk_style_context_get_background_color(sc,GTK_STATE_FLAG_NORMAL,&scolor); 
+//         
+//            cairo_set_source_rgba(cr,scolor.red,scolor.green,scolor.blue,scolor.alpha);
+//            cairo_rectangle (cr,0, 0,gtk_widget_get_allocated_width(widget),gtk_widget_get_allocated_height(widget));
+//            cairo_fill (cr) ;             
+            
+            
+            
+//                        gtk_render_background(sc, cr, 0, 0,
+//                                  gtk_widget_get_allocated_width(widget),
+//                                  gtk_widget_get_allocated_height(widget));
+            
+//            gtk_render_background(sc, cr, 0, 0,
+//                                  gtk_widget_get_allocated_width(widget),
+//                                  gtk_widget_get_allocated_height(widget));            
+            
+        }
+        
+        
+        if (pixbuf != NULL)// draw with background image
+        {
+            
+            cairo_save (cr);
+            cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+            cairo_paint(cr);
+            cairo_restore (cr);
+            
+            gint w = gdk_pixbuf_get_width(pixbuf);
+            gint h = gdk_pixbuf_get_height(pixbuf);
+
+            /* Tile the image */
+            for (y = 0; y < p->ah; y += h)
+                for (x = 0; x < p->aw; x += w)
+                {
+                    gdk_cairo_set_source_pixbuf(cr, pixbuf, x, y);
+                    cairo_paint(cr);
+                }
+            y = 0;
+            g_object_unref(pixbuf);
+        }
+        else
+        { //from system theme
+            
+            /* Either color is set or image is invalid, fill the background */
+            //gdk_cairo_set_source_color(cr, &p->gtintcolor);
+//            cairo_set_source_rgba(cr,p->gtintcolor.red,p->gtintcolor.green,p->gtintcolor.blue,p->gtintcolor.alpha);// fix by MS
+//            //cairo_paint_with_alpha(cr, p->transparent ? (double)p->alpha/255 : 1.0);
+//            cairo_rectangle (cr,0, 0,gtk_widget_get_allocated_width(widget),gtk_widget_get_allocated_height(widget));
+//            cairo_fill (cr) ;  
+            //cairo_paint_with_alpha(cr, p->gtintcolor.alpha);
+            //cairo_paint(cr);
+        }
+            
+      
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+           
+            //GdkRGBA scolor;
+            //gtk_style_context_get_background_color(sc,GTK_STATE_FLAG_NORMAL,&scolor);
+            
+            //cairo_set_source_rgba(cr,204,4,90,1);
+            //cairo_rectangle (cr,0, 0,
+            //                      gtk_widget_get_allocated_width(widget),
+            //                      gtk_widget_get_allocated_height(widget));
+            //	cairo_fill (cr) ;
+            
+            //gtk_render_background(sc, cr, 0, 0,
+            //                      gtk_widget_get_allocated_width(widget),
+            //                      gtk_widget_get_allocated_height(widget));
+
+            
+//            GdkWindow *window = gtk_widget_get_window(widget);
+//            gdk_window_set_background_pattern(window, NULL);
+//            
+//            //gdk_window_invalidate_rect(window, NULL, TRUE);
+//            
+//            gtk_style_context_set_background(sc, window);
 
         ig = PANEL_ICON_GRID(widget);
         if (ig->dest_item && gtk_widget_get_has_window(widget))

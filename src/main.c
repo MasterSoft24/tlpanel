@@ -592,11 +592,16 @@ int main(int argc, char *argv[], char *env[])
 
     g_object_unref(fbev);
 
-    if (!is_restarting)
+    if (!is_restarting){
         return 0;
-    if (strchr(argv[0], G_DIR_SEPARATOR))
+    }
+    
+    if (strchr(argv[0], G_DIR_SEPARATOR)){
         execve(argv[0], argv, env);
-    else
+    }
+    else{
         execve(g_find_program_in_path(argv[0]), argv, env);
+    }
+    
     return 1;
 }

@@ -48,6 +48,8 @@
 #include <gtk/gtkx.h>
 #endif
 
+LXPanel * panel_global_ref; // for using in icon-grid.c in background redraw
+
 static void plugin_class_unref(PluginClass * pc);
 
 GQuark lxpanel_plugin_qinit;
@@ -192,16 +194,16 @@ void plugin_widget_set_background(GtkWidget * w, LXPanel * panel)
         if (gtk_widget_get_has_window(w))
         {
             Panel *p = panel->priv;
+            
+            panel_global_ref=panel;
 
             gtk_widget_set_app_paintable(w, ((p->background) || (p->transparent)));
             if (gtk_widget_get_realized(w))
             {
                 GdkWindow *window = gtk_widget_get_window(w);
-#if GTK_CHECK_VERSION(3, 0, 0)
+
                 gdk_window_set_background_pattern(window, NULL);
-#else
-                gdk_window_set_back_pixmap(window, NULL, TRUE);
-#endif
+
                 if ((p->background) || (p->transparent))
                     /* Reset background for the child, using background of panel */
                     gdk_window_invalidate_rect(window, NULL, TRUE);
@@ -209,6 +211,7 @@ void plugin_widget_set_background(GtkWidget * w, LXPanel * panel)
                     /* Set background according to the current GTK style. */
                     gtk_style_set_background(gtk_widget_get_style(w), window,
                                              GTK_STATE_NORMAL);
+                
             }
         }
 

@@ -219,7 +219,12 @@ static void balloon_message_display(TrayPlugin * tr, BalloonMessage * msg)
     tr->balloon_message_popup = gtk_window_new(GTK_WINDOW_POPUP);
     GtkWidget * balloon_text = gtk_label_new(msg->string);
     gtk_label_set_line_wrap(GTK_LABEL(balloon_text), TRUE);
-    gtk_misc_set_alignment(GTK_MISC(balloon_text), 0.5, 0.5);
+    
+    //gtk_misc_set_alignment(GTK_MISC(balloon_text), 0.5, 0.5);
+    gtk_label_set_xalign(GTK_LABEL(balloon_text), 0.5); // fix by MS
+    gtk_label_set_yalign(GTK_LABEL(balloon_text), 0.5);
+    
+    
     gtk_container_add(GTK_CONTAINER(tr->balloon_message_popup), balloon_text);
     gtk_widget_show(balloon_text);
     gtk_container_set_border_width(GTK_CONTAINER(tr->balloon_message_popup), 4);
@@ -418,6 +423,9 @@ static void balloon_message_data_event(TrayPlugin * tr, XClientMessageEvent * xe
 /* Handler for request dock message. */
 static void trayclient_request_dock(TrayPlugin * tr, XClientMessageEvent * xevent)
 {
+    
+    g_warning("trayclient_request_dock ");
+    
     /* Search for the window in the client list.  Set up context to do an insert right away if needed. */
     TrayClient * tc_pred = NULL;
     TrayClient * tc_cursor;
@@ -428,7 +436,7 @@ static void trayclient_request_dock(TrayPlugin * tr, XClientMessageEvent * xeven
         if (tc_cursor->window > (Window)xevent->data.l[2])
             break;
     }
-
+    
     /* Allocate and initialize new client structure. */
     TrayClient * tc = g_new0(TrayClient, 1);
     tc->window = xevent->data.l[2];
@@ -471,6 +479,7 @@ static GdkFilterReturn tray_event_filter(XEvent * xev, GdkEvent * event, TrayPlu
 {
     if (xev->type == DestroyNotify)
     {
+        
         /* Look for DestroyNotify events on tray icon windows and update state.
          * We do it this way rather than with a "plug_removed" event because delivery
          * of plug_removed events is observed to be unreliable if the client
@@ -567,7 +576,13 @@ static GtkWidget *tray_constructor(LXPanel *panel, config_setting_t *settings)
     GdkDisplay * display = gdk_screen_get_display(screen);
 
     /* Create the selection atom.  This has the screen number in it, so cannot be done ahead of time. */
-    char * selection_atom_name = g_strdup_printf("_NET_SYSTEM_TRAY_S%d", gdk_screen_get_number(screen));
+    //char * selection_atom_name = g_strdup_printf("_NET_SYSTEM_TRAY_S%d", gdk_screen_get_number(screen));
+    
+    const char* dsp=gdk_display_get_name(display);// fix by MS
+    dsp++;
+    char * selection_atom_name = g_strdup_printf("_NET_SYSTEM_TRAY_S%s",dsp );
+    
+    
     Atom selection_atom = gdk_x11_get_xatom_by_name_for_display(display, selection_atom_name);
     GdkAtom gdk_selection_atom = gdk_atom_intern(selection_atom_name, FALSE);
     g_free(selection_atom_name);
